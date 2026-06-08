@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROOMTINE — 루틴이 쌓이면, 방이 완성된다</title>
+  <style>
+    :root {
+      --ivory:#F5EFE0;
+      --sage:#8BAF8E;
+      --terra:#C97B5A;
+      --lav:#B8A9C9;
+      --charcoal:#3D3530;
+      --cream:#FFF9EE;
+      --wood:#D7A979;
+      --shadow: 0 18px 55px rgba(61,53,48,.16);
+      --soft-shadow: 0 10px 26px rgba(61,53,48,.10);
+      --radius: 26px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Pretendard, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--charcoal);
+      background:
+        radial-gradient(circle at top left, rgba(201,123,90,.18), transparent 32rem),
+        radial-gradient(circle at 90% 10%, rgba(184,169,201,.25), transparent 28rem),
+        linear-gradient(135deg, #fbf5e9 0%, #f1e7d5 100%);
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .logo {
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      background: var(--terra);
+      box-shadow: var(--soft-shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:before {
+      content:"";
+      position:absolute;
+      left:15px;
+      bottom:12px;
+      width:28px;
+      height:28px;
+      background: var(--ivory);
+      clip-path: polygon(50% 0, 100% 38%, 100% 100%, 0 100%, 0 38%);
+    }
+    .logo:after {
+      content:"";
+      position:absolute;
+      left:25px;
+      bottom:20px;
+      width:9px;
+      height:12px;
+      background:#FFE4A7;
+      border-radius: 2px;
+      box-shadow: 0 0 14px #FFE4A7;
+    }
+
+    h1 {
+      margin:0;
+      font-size: clamp(1.65rem, 4vw, 3rem);
+      letter-spacing:-.05em;
+      line-height:1;
+    }
+
+    .tagline {
+      margin:.35rem 0 0;
+      color: rgba(61,53,48,.72);
+      font-weight: 700;
+    }
+
+    .stats {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill {
+      border:1px solid rgba(61,53,48,.1);
+      background: rgba(255,249,238,.74);
+      backdrop-filter: blur(12px);
+      padding: 10px 14px;
+      border-radius:999px;
+      box-shadow: var(--soft-shadow);
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .pill span { color:var(--terra); }
+
+    .grid {
+      display:grid;
+      grid-template-columns: 1.25fr .85fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .card {
+      background: rgba(255,249,238,.82);
+      border: 1px solid rgba(61,53,48,.09);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(16px);
+    }
+
+    .room-card {
+      min-height: 620px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .section-title {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin:0;
+      letter-spacing:-.04em;
+      font-size:1.3rem;
+    }
+
+    .caption {
+      color: rgba(61,53,48,.62);
+      font-size:.9rem;
+      font-weight:700;
+    }
+
+    .room-wrap {
+      background: linear-gradient(#f8eacf, #ead8be);
+      border-radius: 24px;
+      padding: 22px;
+      position:relative;
+      min-height: 470px;
+      overflow:hidden;
+      border: 2px solid rgba(61,53,48,.08);
+    }
+
+    .room-wrap.night {
+      background: linear-gradient(#4b4058, #77627b);
+      color:#fff;
+    }
+    .room-wrap.night .floor { background: #70594d; }
+    .room-wrap.night .wall { background: #64506b; }
+    .room-wrap.night .window { background: #202538; }
+    .room-wrap.night .moon { display:block; }
+
+    .wall {
+      position:absolute;
+      left:0;
+      top:0;
+      right:0;
+      height:63%;
+      background: var(--wall, #F5EFE0);
+      transition:.35s;
+    }
+
+    .floor {
+      position:absolute;
+      left:-8%;
+      right:-8%;
+      bottom:-5%;
+      height:48%;
+      background: var(--floor, #D7A979);
+      transform: skewY(-7deg);
+      transform-origin: top left;
+      transition:.35s;
+      border-top: 4px solid rgba(61,53,48,.08);
+    }
+
+    .window {
+      position:absolute;
+      top:58px;
+      right:70px;
+      width:94px;
+      height:82px;
+      background:#BEE3F8;
+      border:7px solid #fff6e7;
+      border-radius:16px;
+      box-shadow: inset 0 -20px 0 rgba(255,255,255,.18), var(--soft-shadow);
+    }
+    .window:before, .window:after {
+      content:"";
+      position:absolute;
+      background:#fff6e7;
+    }
+    .window:before { left:39px; top:0; width:6px; height:100%; }
+    .window:after { left:0; top:35px; height:6px; width:100%; }
+
+    .moon {
+      display:none;
+      position:absolute;
+      top:10px;
+      right:12px;
+      width:18px;
+      height:18px;
+      background:#ffe9a3;
+      border-radius:50%;
+      box-shadow:0 0 18px #ffe9a3;
+    }
+
+    .room {
+      position:absolute;
+      inset:0;
+      z-index:2;
+    }
+
+    .item {
+      position:absolute;
+      user-select:none;
+      filter: drop-shadow(0 10px 8px rgba(61,53,48,.14));
+      animation: pop .34s ease both;
+    }
+    @keyframes pop {
+      from { transform: scale(.82) translateY(8px); opacity:0; }
+      to { transform: scale(1) translateY(0); opacity:1; }
+    }
+
+    .bed {
+      left: 72px; bottom: 86px; width: 172px; height: 75px;
+      background:#EFAE91;
+      border-radius: 18px 18px 12px 12px;
+      border: 5px solid rgba(61,53,48,.08);
+    }
+    .bed:before {
+      content:"";
+      position:absolute;
+      left:12px; top:-22px;
+      width:64px; height:34px;
+      background:#fff9ee;
+      border-radius:12px;
+    }
+    .bed:after {
+      content:"";
+      position:absolute;
+      right:12px; top:15px;
+      width:76px; height:34px;
+      background:#f8c0aa;
+      border-radius:12px;
+    }
+
+    .desk {
+      left: 294px; bottom: 104px; width: 140px; height: 18px;
+      background:#A9704C;
+      border-radius:9px;
+    }
+    .desk:before,.desk:after {
+      content:"";
+      position:absolute;
+      top:14px;
+      width:12px; height:68px;
+      background:#8d5c40;
+      border-radius:6px;
+    }
+    .desk:before { left:12px; }
+    .desk:after { right:12px; }
+    .desk .lamp {
+      position:absolute;
+      left:82px; top:-50px;
+      width:30px; height:45px;
+      border-left:6px solid #8d5c40;
+    }
+    .desk .lamp:after {
+      content:"";
+      position:absolute;
+      left:-22px; top:-1px;
+      width:42px; height:24px;
+      background:#FFE4A7;
+      border-radius: 50% 50% 12px 12px;
+      box-shadow:0 0 25px rgba(255,228,167,.85);
+    }
+
+    .plant {
+      left: 456px; bottom: 110px; width: 56px; height: 68px;
+    }
+    .plant:before {
+      content:"";
+      position:absolute;
+      bottom:0; left:13px;
+      width:34px; height:35px;
+      background:#C97B5A;
+      border-radius:8px 8px 16px 16px;
+    }
+    .plant:after {
+      content:"🌿";
+      position:absolute;
+      left:-4px; top:-16px;
+      font-size:58px;
+    }
+
+    .poster {
+      left: 120px; top: 98px; width: 74px; height: 94px;
+      background:#B8A9C9;
+      border:7px solid #fff9ee;
+      border-radius:12px;
+    }
+    .poster:after {
+      content:"✦";
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      color:#fff9ee;
+      font-size:35px;
+    }
+
+    .rug {
+      left: 232px; bottom: 54px; width: 210px; height: 70px;
+      background:rgba(139,175,142,.72);
+      border-radius:50%;
+      filter: drop-shadow(0 8px 8px rgba(61,53,48,.08));
+    }
+
+    .sofa {
+      left: 250px; bottom: 138px; width: 148px; height: 70px;
+      background:#8BAF8E;
+      border-radius: 22px 22px 15px 15px;
+    }
+    .sofa:before {
+      content:"";
+      position:absolute;
+      left:10px; right:10px; bottom:31px; height:46px;
+      background:#9fc2a2;
+      border-radius:20px 20px 8px 8px;
+    }
+    .sofa:after {
+      content:"";
+      position:absolute;
+      left:20px; right:20px; bottom:-10px; height:14px;
+      background:#70513f;
+      border-radius:8px;
+    }
+
+    .shelf {
+      left: 45px; top: 118px; width: 44px; height: 130px;
+      background:#A9704C;
+      border-radius:10px;
+      box-shadow: inset 0 34px 0 rgba(255,249,238,.25), inset 0 68px 0 rgba(0,0,0,.08), inset 0 102px 0 rgba(255,249,238,.2);
+    }
+    .shelf:after {
+      content:"📚";
+      position:absolute;
+      left:-6px; top:18px;
+      font-size:34px;
+    }
+
+    .cat {
+      left: 448px; bottom: 70px;
+      font-size:48px;
+    }
+
+    .mess {
+      display:none;
+      position:absolute;
+      z-index:5;
+      color:rgba(61,53,48,.48);
+      font-size:24px;
+      animation: wobble 1.6s ease infinite alternate;
+    }
+    .mess.m1 { left: 282px; bottom: 83px; }
+    .mess.m2 { left: 72px; bottom: 182px; }
+    .mess.m3 { right: 110px; bottom: 170px; }
+    .is-messy .mess { display:block; }
+    @keyframes wobble {
+      from { transform: rotate(-3deg); }
+      to { transform: rotate(4deg); }
+    }
+
+    .room-actions {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .btn {
+      border:0;
+      background:var(--terra);
+      color:#fff;
+      font-weight:900;
+      padding:12px 16px;
+      border-radius:16px;
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(201,123,90,.28);
+      transition:.18s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.secondary {
+      background: #fff9ee;
+      color: var(--charcoal);
+      border:1px solid rgba(61,53,48,.1);
+      box-shadow: var(--soft-shadow);
+    }
+    .btn.sage { background:var(--sage); box-shadow: 0 8px 18px rgba(139,175,142,.25); }
+    .btn:disabled {
+      opacity:.45;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .panel {
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .routine-list {
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .routine {
+      display:grid;
+      grid-template-columns: auto 1fr auto;
+      gap:12px;
+      align-items:center;
+      padding:12px;
+      background: rgba(245,239,224,.78);
+      border: 1px solid rgba(61,53,48,.08);
+      border-radius:18px;
+    }
+
+    .routine input {
+      width:22px;
+      height:22px;
+      accent-color: var(--sage);
+    }
+
+    .routine b { display:block; }
+    .routine small { color: rgba(61,53,48,.58); font-weight:700; }
+
+    .coin {
+      color:var(--terra);
+      font-weight:900;
+    }
+
+    .add-form {
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .add-form input, .add-form select {
+      min-width:0;
+      border:1px solid rgba(61,53,48,.12);
+      background:#fffdf6;
+      border-radius:14px;
+      padding:12px 13px;
+      color:var(--charcoal);
+      outline:0;
+    }
+    .add-form select { grid-column: 1 / 2; }
+
+    .shop {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:10px;
+    }
+
+    .shop-item {
+      padding:12px;
+      background:#fffdf6;
+      border:1px solid rgba(61,53,48,.09);
+      border-radius:18px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .shop-top {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+    }
+
+    .emoji {
+      width:42px;
+      height:42px;
+      display:grid;
+      place-items:center;
+      border-radius:14px;
+      background:var(--ivory);
+      font-size:24px;
+    }
+
+    .shop-item h3 {
+      margin:0;
+      font-size:1rem;
+    }
+
+    .shop-item p {
+      margin:0;
+      color: rgba(61,53,48,.6);
+      font-weight:700;
+      font-size:.84rem;
+      min-height: 2.3em;
+    }
+
+    .tiny {
+      font-size:.8rem;
+      color:rgba(61,53,48,.55);
+      font-weight:800;
+    }
+
+    .toast {
+      position: fixed;
+      left:50%;
+      bottom:24px;
+      transform: translateX(-50%) translateY(20px);
+      background:rgba(61,53,48,.92);
+      color:white;
+      padding:13px 16px;
+      border-radius:999px;
+      opacity:0;
+      pointer-events:none;
+      transition:.22s;
+      z-index:20;
+      font-weight:800;
+      box-shadow:var(--shadow);
+    }
+    .toast.show {
+      opacity:1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .share-card {
+      display:none;
+      margin-top:14px;
+      padding:16px;
+      border-radius:22px;
+      background:linear-gradient(135deg, #fff9ee, #f4e6d0);
+      border:1px solid rgba(61,53,48,.1);
+    }
+    .share-card.show { display:block; }
+    .share-card b { color:var(--terra); }
+
+    .progress {
+      height:10px;
+      background:rgba(61,53,48,.08);
+      border-radius:99px;
+      overflow:hidden;
+      margin-top:8px;
+    }
+    .progress span {
+      display:block;
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, var(--sage), var(--terra));
+      transition:.3s;
+    }
+
+    @media (max-width: 940px) {
+      header { align-items:flex-start; flex-direction:column; }
+      .stats { justify-content:flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      .room-card { position:static; min-height:auto; }
+      .room-wrap { min-height:420px; }
+    }
+
+    @media (max-width: 560px) {
+      .app { padding:14px; }
+      .shop { grid-template-columns:1fr; }
+      .room-wrap { transform-origin: top left; overflow:hidden; min-height:390px; }
+      .bed { left:36px; }
+      .desk { left:205px; }
+      .plant { left:350px; }
+      .sofa { left:180px; }
+      .window { right:38px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>ROOMTINE</h1>
+          <p class="tagline">루틴이 쌓이면, 방이 완성된다 🏠</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="pill">🪙 코지 코인 <span id="coins">0</span></div>
+        <div class="pill">🔥 연속 달성 <span id="streak">0</span>일</div>
+        <div class="pill">✨ 완성도 <span id="completeRate">0</span>%</div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card room-card">
+        <div class="section-title">
+          <div>
+            <h2>내 방</h2>
+            <div class="caption" id="roomMessage">오늘도 잘했어요. 방이 조금 더 빛나고 있어요.</div>
+          </div>
+          <select id="timeSelect" class="btn secondary" aria-label="시간대 선택">
+            <option value="day">낮</option>
+            <option value="night">밤</option>
+          </select>
+        </div>
+
+        <div class="room-wrap" id="roomWrap">
+          <div class="wall" id="wall"></div>
+          <div class="floor" id="floor"></div>
+          <div class="window"><span class="moon"></span></div>
+          <div class="room" id="room">
+            <div class="mess m1">🧦</div>
+            <div class="mess m2">먼지</div>
+            <div class="mess m3">📦</div>
+          </div>
+        </div>
+
+        <div class="room-actions">
+          <button class="btn sage" id="completeAll">오늘 루틴 모두 완료</button>
+          <button class="btn secondary" id="shareBtn">방 공유 카드 만들기</button>
+          <button class="btn secondary" id="resetBtn">초기화</button>
+        </div>
+
+        <div class="share-card" id="shareCard">
+          <p><b>#오늘의내방</b> — 나는 오늘 <span id="shareDone">0</span>개의 루틴을 완료했고, 내 방은 <span id="shareRate">0</span>% 완성됐어요.</p>
+          <p class="tiny">인스타/카카오 공유용 정사각형 카드 콘셉트의 텍스트 미리보기입니다.</p>
+        </div>
+      </section>
+
+      <div class="panel">
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>오늘의 루틴</h2>
+              <div class="caption">체크하면 코지 코인 +10, 하루 전체 완료 시 연속 달성 보너스!</div>
+            </div>
+          </div>
+          <div class="routine-list" id="routineList"></div>
+
+          <div class="add-form">
+            <input id="routineInput" placeholder="예: 물 2L 마시기" />
+            <button class="btn" id="addRoutine">추가</button>
+            <select id="categoryInput">
+              <option value="운동">운동</option>
+              <option value="수면">수면</option>
+              <option value="식습관">식습관</option>
+              <option value="공부">공부</option>
+              <option value="마음챙김">마음챙김</option>
+              <option value="취미">취미</option>
+              <option value="사용자 정의">사용자 정의</option>
+            </select>
+          </div>
+
+          <div class="progress"><span id="routineProgress"></span></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>코지 상점</h2>
+              <div class="caption">가구와 소품을 사면 방이 바로 바뀌어요.</div>
+            </div>
+          </div>
+          <div class="shop" id="shop"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>가벼운 연결</h2>
+              <div class="caption">부담 없는 응원만 남기는 소셜 콘셉트</div>
+            </div>
+          </div>
+          <button class="btn secondary" id="heartBtn">랜덤 방에 하트 남기기 💚</button>
+          <p class="tiny" id="socialText">오늘 받은 하트 0개 · 친구 방 읽기 전용 방문 가능</p>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const defaultState = {
+      coins: 80,
+      streak: 0,
+      hearts: 0,
+      lastBonusDate: "",
+      routines: [
+        { id: crypto.randomUUID(), title: "아침 스트레칭 10분", category: "운동", done: false },
+        { id: crypto.randomUUID(), title: "책상 정리하기", category: "마음챙김", done: false },
+        { id: crypto.randomUUID(), title: "오늘 배운 것 3줄 기록", category: "공부", done: false }
+      ],
+      owned: ["bed"],
+      wall: "#F5EFE0",
+      floor: "#D7A979"
+    };
+
+    const items = [
+      { id:"bed", name:"포근한 침대", emoji:"🛏️", price:0, desc:"처음 지급되는 기본 가구", type:"decor" },
+      { id:"desk", name:"집중 책상", emoji:"🪵", price:60, desc:"공부 루틴에 어울리는 가구", type:"decor" },
+      { id:"plant", name:"초록 식물", emoji:"🌿", price:40, desc:"운동/식습관 루틴 보상 느낌", type:"decor" },
+      { id:"poster", name:"별빛 포스터", emoji:"✨", price:35, desc:"나만의 취향을 벽에 붙이기", type:"decor" },
+      { id:"rug", name:"세이지 러그", emoji:"🟢", price:50, desc:"방에 따뜻한 생활감을 더해요", type:"decor" },
+      { id:"sofa", name:"아늑한 소파", emoji:"🛋️", price:90, desc:"7일 연속 달성 감성의 희귀 가구", type:"decor" },
+      { id:"shelf", name:"책장", emoji:"📚", price:70, desc:"공부 루틴 누적 보상 콘셉트", type:"decor" },
+      { id:"cat", name:"룸메이트 고양이", emoji:"🐈", price:120, desc:"30일 달성 시즌 보상 느낌", type:"decor" },
+      { id:"wallSage", name:"세이지 벽지", emoji:"🎨", price:55, desc:"완료 상태를 닮은 차분한 벽", type:"wall", value:"#DDE8D9" },
+      { id:"floorTile", name:"아이보리 타일", emoji:"▫️", price:55, desc:"정돈된 무드의 바닥재", type:"floor", value:"#E8DCC8" }
+    ];
+
+    let state = load();
+
+    function load() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("roomtine-state"));
+        return saved ? { ...defaultState, ...saved } : structuredClone(defaultState);
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function save() {
+      localStorage.setItem("roomtine-state", JSON.stringify(state));
+    }
+
+    function todayKey() {
+      return new Date().toISOString().slice(0,10);
+    }
+
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    function routineIcon(category) {
+      return {
+        "운동":"💪", "수면":"🌙", "식습관":"🥗", "공부":"📚", "마음챙김":"🧘", "취미":"🎨", "사용자 정의":"⭐"
+      }[category] || "⭐";
+    }
+
+    function render() {
+      document.getElementById("coins").textContent = state.coins;
+      document.getElementById("streak").textContent = state.streak;
+      document.getElementById("socialText").textContent = `오늘 받은 하트 ${state.hearts}개 · 친구 방 읽기 전용 방문 가능`;
+      document.getElementById("wall").style.setProperty("--wall", state.wall);
+      document.getElementById("floor").style.setProperty("--floor", state.floor);
+
+      const doneCount = state.routines.filter(r => r.done).length;
+      const rate = state.routines.length ? Math.round(doneCount / state.routines.length * 100) : 0;
+      const ownedDecor = state.owned.filter(id => items.find(i => i.id === id)?.type === "decor").length;
+      const completeRate = Math.min(100, Math.round(ownedDecor / 8 * 100));
+      document.getElementById("completeRate").textContent = completeRate;
+      document.getElementById("routineProgress").style.width = `${rate}%`;
+      document.getElementById("shareDone").textContent = doneCount;
+      document.getElementById("shareRate").textContent = completeRate;
+
+      const msg = document.getElementById("roomMessage");
+      if (rate === 100) msg.textContent = "7일 연속이에요! 새 벽지가 도착한 것 같은 기분 ✨";
+      else if (rate === 0) msg.textContent = "방이 조금 기다리고 있어요. 내일도 괜찮아요 🌙";
+      else msg.textContent = "오늘도 잘했어요 🏠 방이 조금 더 빛나고 있어요";
+
+      renderRoutines();
+      renderRoom(rate);
+      renderShop();
+      save();
+    }
+
+    function renderRoutines() {
+      const list = document.getElementById("routineList");
+      list.innerHTML = "";
+      state.routines.forEach(r => {
+        const row = document.createElement("label");
+        row.className = "routine";
+        row.innerHTML = `
+          <input type="checkbox" ${r.done ? "checked" : ""} />
+          <div><b>${routineIcon(r.category)} ${escapeHtml(r.title)}</b><small>${r.category} · 완료 시 +10 코인</small></div>
+          <span class="coin">${r.done ? "완료" : "+10"}</span>
+        `;
+        row.querySelector("input").addEventListener("change", e => {
+          r.done = e.target.checked;
+          if (r.done) {
+            state.coins += 10;
+            toast("오늘도 잘했어요! 코지 코인 +10 🪙");
+          } else {
+            state.coins = Math.max(0, state.coins - 10);
+          }
+          render();
+        });
+        list.appendChild(row);
+      });
+    }
+
+    function renderRoom(rate) {
+      const room = document.getElementById("room");
+      room.querySelectorAll(".item").forEach(el => el.remove());
+      const wrap = document.getElementById("roomWrap");
+      wrap.classList.toggle("is-messy", rate < 34);
+
+      state.owned.forEach(id => {
+        const item = items.find(i => i.id === id);
+        if (!item || item.type !== "decor") return;
+        const el = document.createElement("div");
+        el.className = `item ${id}`;
+        if (id === "desk") el.innerHTML = `<span class="lamp"></span>`;
+        if (id === "cat") el.textContent = "🐈";
+        room.appendChild(el);
+      });
+    }
+
+    function renderShop() {
+      const shop = document.getElementById("shop");
+      shop.innerHTML = "";
+      items.forEach(item => {
+        const owned = state.owned.includes(item.id);
+        const card = document.createElement("div");
+        card.className = "shop-item";
+        card.innerHTML = `
+          <div class="shop-top">
+            <div>
+              <h3>${item.name}</h3>
+              <p>${item.desc}</p>
+            </div>
+            <div class="emoji">${item.emoji}</div>
+          </div>
+          <button class="btn ${owned ? "secondary" : ""}" ${owned || state.coins < item.price ? "disabled" : ""}>
+            ${owned ? "보유 중" : `${item.price} 코인`}
+          </button>
+        `;
+        card.querySelector("button").addEventListener("click", () => buy(item));
+        shop.appendChild(card);
+      });
+    }
+
+    function buy(item) {
+      if (state.owned.includes(item.id)) return;
+      if (state.coins < item.price) return toast("코인이 조금 부족해요. 루틴을 완료해볼까요? 🪙");
+      state.coins -= item.price;
+      if (item.type === "wall") state.wall = item.value;
+      else if (item.type === "floor") state.floor = item.value;
+      else state.owned.push(item.id);
+      if (item.type !== "decor") state.owned.push(item.id);
+      toast(`${item.name} 구매 완료! 방이 더 아늑해졌어요 🏠`);
+      render();
+    }
+
+    function completeAll() {
+      const notDone = state.routines.filter(r => !r.done);
+      if (!notDone.length) {
+        toast("이미 오늘의 루틴을 모두 완료했어요 ✨");
+        return;
+      }
+      notDone.forEach(r => {
+        r.done = true;
+        state.coins += 10;
+      });
+
+      const today = todayKey();
+      if (state.lastBonusDate !== today) {
+        state.streak += 1;
+        state.lastBonusDate = today;
+        if (state.streak === 3) {
+          state.coins += 30;
+          if (!state.owned.includes("poster")) state.owned.push("poster");
+          toast("3일 연속! 보너스 +30과 랜덤 소품을 받았어요 ✨");
+        } else if (state.streak === 7) {
+          if (!state.owned.includes("sofa")) state.owned.push("sofa");
+          toast("7일 연속! 희귀 가구가 잠금해제됐어요 🛋️");
+        } else {
+          toast("오늘 루틴 완료! 연속 달성이 쌓이고 있어요 🔥");
+        }
+      }
+      render();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, s => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+      }[s]));
+    }
+
+    document.getElementById("addRoutine").addEventListener("click", () => {
+      const input = document.getElementById("routineInput");
+      const category = document.getElementById("categoryInput").value;
+      const title = input.value.trim();
+      if (!title) return toast("추가할 루틴을 적어주세요.");
+      state.routines.push({ id: crypto.randomUUID(), title, category, done:false });
+      input.value = "";
+      toast("새 루틴이 방에 도착했어요 🏠");
+      render();
+    });
+
+    document.getElementById("routineInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("addRoutine").click();
+    });
+
+    document.getElementById("completeAll").addEventListener("click", completeAll);
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("ROOMTINE 데이터를 초기화할까요?")) return;
+      localStorage.removeItem("roomtine-state");
+      state = structuredClone(defaultState);
+      toast("초기화했어요. 빈 방에서 다시 시작해요.");
+      render();
+    });
+
+    document.getElementById("shareBtn").addEventListener("click", () => {
+      document.getElementById("shareCard").classList.toggle("show");
+      toast("방 공유 카드가 준비됐어요 #오늘의내방");
+    });
+
+    document.getElementById("heartBtn").addEventListener("click", () => {
+      state.hearts += 1;
+      toast("랜덤 방에 하트를 남겼어요 💚");
+      render();
+    });
+
+    document.getElementById("timeSelect").addEventListener("change", e => {
+      document.getElementById("roomWrap").classList.toggle("night", e.target.value === "night");
+    });
+
+    render();
+  </script>
+</body>
+</html>
